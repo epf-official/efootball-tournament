@@ -1,117 +1,209 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>eFootball 5v5 Tournament Hub</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { background-color: #0f172a; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>eFootball Tournament Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="min-h-screen pb-12">
+<body class="bg-slate-900 text-white font-sans min-h-screen pb-12">
 
-    <!-- Header -->
-    <header class="glass sticky top-0 z-50 py-4 px-6 mb-8 flex justify-between items-center shadow-lg border-b border-slate-700">
-        <div class="flex items-center space-x-3">
-            <i class="fa-solid fa-gamepad text-3xl text-emerald-400"></i>
-            <h1 class="text-xl font-bold tracking-wide text-white">eFootball 5v5 Championship</h1>
+  <!-- Header / Navbar -->
+  <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50 px-4 py-3 shadow-lg">
+    <div class="max-w-4xl mx-auto flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-gamepad text-emerald-400 text-2xl"></i>
+        <h1 class="text-lg md:text-xl font-bold tracking-wide">eFootball Championship</h1>
+      </div>
+      <button onclick="toggleModal('modal-register')" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-lg text-sm transition-all shadow-md">
+        <i class="fa-solid fa-user-plus mr-1"></i> ক্যাপ্টেন রেজিস্টার
+      </button>
+    </div>
+  </header>
+
+  <div class="max-w-4xl mx-auto px-4 mt-6 space-y-8">
+
+    <!-- Hero Banner -->
+    <div class="bg-gradient-to-r from-emerald-900/40 to-slate-800 border border-emerald-500/30 rounded-2xl p-6 text-center shadow-xl">
+      <h2 class="text-2xl md:text-3xl font-extrabold text-emerald-400 mb-2">OFFICIAL TOURNAMENT DASHBOARD</h2>
+      <p class="text-slate-300 text-sm md:text-base">নিবন্ধিত টিমগুলোর পয়েন্ট টেবিল ও স্কোয়াড লিস্ট</p>
+    </div>
+
+    <!-- Points Table -->
+    <section class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-md">
+      <h3 class="text-xl font-bold text-emerald-400 mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-trophy"></i> পয়েন্ট টেবিল (Points Table)
+      </h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-700/50 text-slate-300 uppercase text-xs">
+            <tr>
+              <th class="p-3">টিম</th>
+              <th class="p-3 text-center">ক্যাপ্টেন</th>
+              <th class="p-3 text-center">প্লেয়ার সংখ্যা</th>
+            </tr>
+          </thead>
+          <tbody id="teams-list" class="divide-y divide-slate-700/50">
+            <tr>
+              <td colspan="3" class="text-center p-4 text-slate-400">টিমের ডাটা লোড হচ্ছে...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Registration Modal -->
+  <div id="modal-register" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <button onclick="toggleModal('modal-register')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+        <i class="fa-solid fa-xmark text-xl"></i>
+      </button>
+      <h3 class="text-xl font-bold text-emerald-400 flex items-center gap-2">
+        <i class="fa-solid fa-shield-halved"></i> টিম রেজিস্ট্রেশন
+      </h3>
+      
+      <form id="reg-form" onsubmit="handleRegistration(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">টিমের নাম (Team Name)</label>
+          <input type="text" id="reg-team" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:border-emerald-500 focus:outline-none" placeholder="e.g. Cyber Strikers">
         </div>
         <div>
-            <button id="loginBtn" onclick="toggleModal('loginModal')" class="bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold px-4 py-2 rounded-lg transition shadow-md">
-                Captain Login
-            </button>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">ক্যাপ্টেনের নাম</label>
+          <input type="text" id="reg-captain" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:border-emerald-500 focus:outline-none" placeholder="ক্যাপ্টেনের নাম">
         </div>
-    </header>
-
-    <div class="max-w-6xl mx-auto px-4 space-y-10">
-
-        <!-- Banner / Status -->
-        <section class="glass p-6 rounded-2xl text-center border border-emerald-500/30 shadow-2xl">
-            <h2 class="text-3xl font-extrabold text-emerald-400 mb-2">OFFICIAL TOURNAMENT DASHBOARD</h2>
-            <p class="text-slate-300">৪ টিমের মহাযুদ্ধ | ১২টি ফিক্সচার | সর্বোচ্চ ৭ জন প্লেয়ার প্রতি টিমে</p>
-        </section>
-
-        <!-- Points Table -->
-        <section class="glass p-6 rounded-2xl">
-            <h3 class="text-xl font-bold text-emerald-400 mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-trophy"></i> পয়েন্ট টেবিল (Points Table)
-            </h3>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm text-slate-300">
-                    <thead class="bg-slate-800/80 text-emerald-400 uppercase text-xs">
-                        <tr>
-                            <th class="p-3">টিম</th>
-                            <th class="p-3">ম্যাচ</th>
-                            <th class="p-3">জয়</th>
-                            <th class="p-3">ড্র</th>
-                            <th class="p-3">হার</th>
-                            <th class="p-3">গোল</th>
-                            <th class="p-3 font-bold text-white">পয়েন্ট</th>
-                        </tr>
-                    </thead>
-                    <tbody id="pointsTableBody">
-                        <tr class="border-b border-slate-700/50 hover:bg-slate-800/40">
-                            <td class="p-3 font-semibold text-white">Team Alpha</td>
-                            <td class="p-3">0</td><td class="p-3">0</td><td class="p-3">0</td><td class="p-3">0</td><td class="p-3">0</td>
-                            <td class="p-3 font-bold text-emerald-400">0</td>
-                        </tr>
-                        <tr class="border-b border-slate-700/50 hover:bg-slate-800/40">
-                            <td class="p-3 font-semibold text-white">Team Bravo</td>
-                            <td class="p-3">0</td><td class="p-3">0</td><td class="p-3">0</td><td class="p-3">0</td><td class="p-3">0</td>
-                            <td class="p-3 font-bold text-emerald-400">0</td>
-                        </tr>
-                        <tr class="border-b border-slate-700/50 hover:bg-slate-800/40">
-                            <td class="p-3 font-semibold text-white">Team Charlie</td>
-                            <td class="p-3">0</td><td class="p-3">0</td><td class="p-3">0</td><td class="p-3">0</td><td class="p-3">0</td>
-                            <td class="p-3 font-bold text-emerald-400">0</td>
-                        </tr>
-                        <tr class="border-b border-slate-700/50 hover:bg-slate-800/40">
-                            <td class="p-3 font-semibold text-white">Team Delta</td>
-                            <td class="p-3">0</td><td class="p-3">0</td><td class="p-3">0</td><td class="p-3">0</td><td class="p-3">0</td>
-                            <td class="p-3 font-bold text-emerald-400">0</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Fixtures Section -->
-        <section class="glass p-6 rounded-2xl">
-            <h3 class="text-xl font-bold text-emerald-400 mb-4 flex items-center gap-2">
-                <i class="fa-solid fa-calendar-days"></i> ম্যাচ ফিক্সচার (12 Matches)
-            </h3>
-            <div id="fixturesList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Fixtures will be generated here -->
-                <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50 text-center text-slate-400">
-                    ফিক্সচার ড্র অ্যাডমিন প্যানেল থেকে সম্পন্ন হলে এখানে দেখা যাবে।
-                </div>
-            </div>
-        </section>
-
-    </div>
-
-    <!-- Login Modal -->
-    <div id="loginModal" class="hidden fixed inset-0 bg-black/70 flex justify-center items-center p-4 z-50">
-        <div class="glass p-6 rounded-2xl w-full max-w-md relative border border-slate-600">
-            <button onclick="toggleModal('loginModal')" class="absolute top-3 right-4 text-slate-400 hover:text-white text-xl">&times;</button>
-            <h3 class="text-xl font-bold text-emerald-400 mb-4">ক্যাপ্টেন লগইন</h3>
-            <div class="space-y-4">
-                <input type="email" placeholder="ক্যাপ্টেন ইমেইল" class="w-full p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-white focus:outline-none focus:border-emerald-500">
-                <input type="password" placeholder="পাসওয়ার্ড" class="w-full p-3 rounded-lg bg-slate-900/80 border border-slate-700 text-white focus:outline-none focus:border-emerald-500">
-                <button class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-900 font-bold py-3 rounded-lg transition">লগইন করুন</button>
-            </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">ক্যাপ্টেনের eFootball ID</label>
+          <input type="text" id="reg-captain-id" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:border-emerald-500 focus:outline-none" placeholder="Game ID">
         </div>
-    </div>
 
-    <script>
-        function toggleModal(id) {
-            const modal = document.getElementById(id);
-            modal.classList.toggle('hidden');
+        <hr class="border-slate-700 my-2">
+        <h4 class="text-sm font-bold text-slate-200">স্কোয়াড মেম্বার (বাকি প্লেয়ারগণ)</h4>
+        
+        <div id="players-input-container" class="space-y-2">
+          <!-- Dynamic Player Inputs -->
+        </div>
+
+        <button type="button" onclick="addPlayerInput()" class="w-full bg-slate-700 hover:bg-slate-600 text-xs text-emerald-400 py-2 rounded-lg font-semibold border border-slate-600">
+          + আরও প্লেয়ার যোগ করুন (সর্বোচ্চ ৭ জন)
+        </button>
+
+        <button type="submit" id="btn-submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3 rounded-lg text-sm transition-all shadow-lg mt-4">
+          রেজিস্ট্রেশন জমা দিন
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Supabase Configuration
+    const SUPABASE_URL = "https://cureynmwzbafajcmxped.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_j74BjQ3DQI-7Zt4Mupvnlw_0gU4EEP8";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let playerNum = 1;
+
+    function toggleModal(id) {
+      const modal = document.getElementById(id);
+      modal.classList.toggle('hidden');
+      modal.classList.toggle('flex');
+    }
+
+    function addPlayerInput() {
+      if(playerNum >= 7) {
+        alert("সর্বোচ্চ ৭ জন প্লেয়ার যুক্ত করা যাবে!");
+        return;
+      }
+      playerNum++;
+      const container = document.getElementById('players-input-container');
+      const div = document.createElement('div');
+      div.className = "flex gap-2";
+      div.innerHTML = `
+        <input type="text" placeholder="প্লেয়ার ${playerNum} নাম" class="p-name w-1/2 bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs focus:border-emerald-500 focus:outline-none" required>
+        <input type="text" placeholder="eFootball ID" class="p-id w-1/2 bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs focus:border-emerald-500 focus:outline-none" required>
+      `;
+      container.appendChild(div);
+    }
+
+    // Initialize with 4 player inputs
+    for(let i=0; i<4; i++) { addPlayerInput(); }
+
+    async function handleRegistration(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit');
+      btn.innerText = "প্রসেস হচ্ছে...";
+      btn.disabled = true;
+
+      const teamName = document.getElementById('reg-team').value.trim();
+      const captainName = document.getElementById('reg-captain').value.trim();
+      const captainId = document.getElementById('reg-captain-id').value.trim();
+
+      try {
+        // Insert Team
+        const { data: teamData, error: teamErr } = await supabaseClient
+          .from('teams')
+          .insert([{ team_name: teamName, captain_name: captainName, captain_id: captainId }])
+          .select();
+
+        if (teamErr) throw teamErr;
+
+        const teamId = teamData[0].id;
+
+        // Collect Players
+        const playerNames = document.querySelectorAll('.p-name');
+        const playerIds = document.querySelectorAll('.p-id');
+        const playersList = [];
+
+        playerNames.forEach((input, index) => {
+          if(input.value.trim() !== '') {
+            playersList.push({
+              team_id: teamId,
+              player_name: input.value.trim(),
+              player_game_id: playerIds[index].value.trim()
+            });
+          }
+        });
+
+        if(playersList.length > 0) {
+          const { error: playErr } = await supabaseClient.from('players').insert(playersList);
+          if (playErr) throw playErr;
         }
-    </script>
+
+        alert("🎉 রেজিস্ট্রেশন সফল হয়েছে!");
+        location.reload();
+
+      } catch (err) {
+        alert("ভুল হয়েছে: " + err.message);
+      } finally {
+        btn.innerText = "রেজিস্ট্রেশন জমা দিন";
+        btn.disabled = false;
+      }
+    }
+
+    async function loadTeams() {
+      const container = document.getElementById('teams-list');
+      const { data: teams, error } = await supabaseClient
+        .from('teams')
+        .select('*, players(id)');
+
+      if(error || !teams || teams.length === 0) {
+        container.innerHTML = `<tr><td colspan="3" class="text-center p-4 text-slate-400">এখনো কোনো টিম রেজিস্টার করেনি!</td></tr>`;
+        return;
+      }
+
+      container.innerHTML = teams.map(t => `
+        <tr class="hover:bg-slate-700/30 transition-all">
+          <td class="p-3 font-bold text-emerald-400">${t.team_name}</td>
+          <td class="p-3 text-center text-slate-300">${t.captain_name}</td>
+          <td class="p-3 text-center text-slate-400">${(t.players ? t.players.length : 0) + 1} জন</td>
+        </tr>
+      `).join('');
+    }
+
+    loadTeams();
+  </script>
 </body>
-                  </html>
-                  
+</html>
