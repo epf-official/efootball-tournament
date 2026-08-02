@@ -341,42 +341,51 @@
           }).join('');
                           // পাবলিক টিম ও প্লেয়ার ইউআইডি কার্ড রেন্ডার
         const publicTeamsContainer = document.getElementById('public-teams-list');
-        if (publicTeamsContainer && teams) {
-          publicTeamsContainer.innerHTML = teams.map(t => {
-            let playersHtml = '';
-            
-            // ক্যাপ্টেন
-            playersHtml += `
-              <div class="flex justify-between items-center bg-slate-950/60 p-2 rounded border border-slate-700/50">
-                <span class="font-bold text-slate-200">👑 ${t.captain_name} <span class="text-[10px] text-emerald-400 font-normal">(Captain)</span></span>
-                <span class="text-amber-300 font-mono font-bold">${t.captain_id || 'N/A'}</span>
-              </div>`;
+          if (publicTeamsContainer && teams) {
+    publicTeamsContainer.innerHTML = teams.map(t => {
+      let playersHtml = '';
 
-            // প্লেয়ারসমূহ
-            if (t.players && t.players.length > 0) {
-              t.players.forEach(p => {
-                const uid = p.player_id || p.game_id || p.user_id || p.efootball_id || 'N/A';
-                playersHtml += `
-                  <div class="flex justify-between items-center bg-slate-950/40 p-2 rounded border border-slate-800">
-                    <span class="text-slate-300">🎮 ${p.player_name || p.name}</span>
-                    <span class="text-amber-300 font-mono font-bold">${uid}</span>
-                  </div>`;
-              });
-            }
+      // ১. ক্যাপ্টেনের ইনপুট ফিল্ড ও সেভ বাটন
+      playersHtml += `
+        <div class="flex items-center justify-between text-xs bg-slate-950/60 p-2 rounded border border-slate-800 my-1">
+          <span class="text-slate-300 font-medium">👑 ${t.captain_name} <span class="text-[10px] text-emerald-400">(Captain)</span></span>
+          <div class="flex items-center gap-1">
+            <input type="text" id="cap-id-${t.id}" value="${t.captain_id || ''}" placeholder="Captain UID" class="bg-slate-900 border border-slate-700 text-amber-300 text-xs px-2 py-1 rounded w-28 text-center focus:outline-none focus:border-emerald-500">
+            <button onclick="updateCaptainId(${t.id})" class="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] px-2 py-1 rounded font-bold transition">Save</button>
+          </div>
+        </div>
+      `;
 
-            return `
-              <div class="bg-slate-900 border border-slate-700 rounded-xl p-3.5 shadow-sm space-y-2">
-                <div class="border-b border-slate-700 pb-2 flex justify-between items-center">
-                  <h4 class="font-bold text-emerald-400 text-sm md:text-base">🏆 ${t.team_name}</h4>
-                  <span class="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded">Verified Crew</span>
-                </div>
-                <div class="space-y-1.5 text-xs">
-                  ${playersHtml}
-                </div>
+      // ২. স্কোয়াডের বাকি প্লেয়ারদের ইনপুট ফিল্ড ও সেভ বাটন
+      if (t.players && t.players.length > 0) {
+        t.players.forEach(p => {
+          const uid = p.player_id || p.game_id || p.user_id || '';
+          playersHtml += `
+            <div class="flex items-center justify-between text-xs bg-slate-950/40 p-2 rounded border border-slate-800/80 my-1">
+              <span class="text-slate-300">🎮 ${p.player_name || p.name}</span>
+              <div class="flex items-center gap-1">
+                <input type="text" id="player-id-${p.id}" value="${uid}" placeholder="Player UID" class="bg-slate-900 border border-slate-700 text-amber-300 text-xs px-2 py-1 rounded w-28 text-center focus:outline-none focus:border-emerald-500">
+                <button onclick="updatePlayerId(${p.id})" class="bg-blue-600 hover:bg-blue-500 text-white text-[10px] px-2 py-1 rounded font-bold transition">Save</button>
               </div>
-            `;
-          }).join('');
-        }
+            </div>
+          `;
+        });
+      }
+
+      return `
+        <div class="bg-slate-900 border border-slate-700/80 rounded-lg p-3 my-2 space-y-2">
+          <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+            <span class="font-bold text-emerald-400 text-sm">🏆 ${t.team_name}</span>
+            <button onclick="deleteTeam(${t.id})" class="text-red-400 hover:text-red-300 text-xs">🗑️ Delete</button>
+          </div>
+          <div class="space-y-1 mt-2">
+            ${playersHtml}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
 
           
 
