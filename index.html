@@ -92,17 +92,36 @@
 
   </div>
 
-  <!-- Admin Floating Trigger -->
+  <!-- Admin Floating Button -->
   <div class="fixed bottom-4 right-4 z-40">
-    <button onclick="promptAdmin()" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 px-3.5 py-2.5 rounded-full text-xs font-bold border border-emerald-500/40 shadow-2xl flex items-center gap-2">
+    <button onclick="openLoginModal()" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 px-4 py-3 rounded-full text-xs font-bold border border-emerald-500/40 shadow-2xl flex items-center gap-2">
       <i class="fa-solid fa-user-shield text-base"></i> Admin Control
     </button>
   </div>
 
-  <!-- Admin Modal -->
+  <!-- Admin Login Modal -->
+  <div id="modal-login" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl relative">
+      <button onclick="closeModal('modal-login')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+        <i class="fa-solid fa-xmark text-xl"></i>
+      </button>
+      <h3 class="text-lg font-bold text-emerald-400 text-center flex items-center justify-center gap-2">
+        <i class="fa-solid fa-lock"></i> এডমিন লগইন
+      </h3>
+      <div>
+        <label class="text-xs text-slate-300 block mb-1">পাসওয়ার্ড দিন:</label>
+        <input type="password" id="admin-pass-input" placeholder="admin123" class="w-full bg-slate-900 border border-slate-600 rounded-lg p-2.5 text-sm text-white focus:outline-none focus:border-emerald-400">
+      </div>
+      <button onclick="checkAdminLogin()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2.5 rounded-lg text-xs shadow">
+        লগইন করুন
+      </button>
+    </div>
+  </div>
+
+  <!-- Admin Control Panel Modal -->
   <div id="modal-admin" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
     <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-      <button onclick="toggleModal('modal-admin')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+      <button onclick="closeModal('modal-admin')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
         <i class="fa-solid fa-xmark text-xl"></i>
       </button>
       <h3 class="text-xl font-bold text-emerald-400 flex items-center gap-2">
@@ -124,19 +143,19 @@
     </div>
   </div>
 
-  <!-- Score Modal -->
+  <!-- Score Entry Modal -->
   <div id="modal-score" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
     <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-      <button onclick="toggleModal('modal-score')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+      <button onclick="closeModal('modal-score')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
         <i class="fa-solid fa-xmark text-xl"></i>
       </button>
       <h3 class="text-lg font-bold text-emerald-400" id="score-modal-title">Match Setup & Score Entry</h3>
-      <p class="text-xs text-slate-400">প্লেয়ার সোয়াপ করতে নাম এডিট করুন এবং নিচে স্কোর ইনপুট দিন:</p>
+      <p class="text-xs text-slate-400">প্লেয়ার নাম পরিবর্তন করতে পারেন এবং স্কোর ইনপুট দিন:</p>
 
       <div class="space-y-3" id="submatches-input-container"></div>
 
       <button onclick="saveMatchScore()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2.5 rounded-lg text-sm shadow">
-        ফলাফল ও ফিক্সচার সেভ করুন
+        ফলাফল সেভ করুন
       </button>
     </div>
   </div>
@@ -148,28 +167,27 @@
 
     let activeMatchId = null;
 
-    function toggleModal(id) {
-      const modal = document.getElementById(id);
-      if(!modal) return;
-      if (modal.classList.contains('hidden')) {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-      } else {
-        modal.classList.remove('flex');
-        modal.classList.add('hidden');
-      }
+    function openLoginModal() {
+      document.getElementById('modal-login').classList.remove('hidden');
+      document.getElementById('modal-login').classList.add('flex');
     }
 
-    function promptAdmin() {
-      setTimeout(() => {
-        const pass = prompt("গোপন এডমিন পাসওয়ার্ড দিন:");
-        if(pass === "admin123") {
-          loadAdminTeams();
-          toggleModal('modal-admin');
-        } else if(pass !== null && pass !== "") {
-          alert("ভুল পাসওয়ার্ড!");
-        }
-      }, 50);
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('flex');
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    function checkAdminLogin() {
+      const pass = document.getElementById('admin-pass-input').value;
+      if(pass === "admin123") {
+        closeModal('modal-login');
+        document.getElementById('admin-pass-input').value = "";
+        loadAdminTeams();
+        document.getElementById('modal-admin').classList.remove('hidden');
+        document.getElementById('modal-admin').classList.add('flex');
+      } else {
+        alert("ভুল পাসওয়ার্ড!");
+      }
     }
 
     async function loadDashboard() {
@@ -255,7 +273,7 @@
           }).join('');
         }
       } catch (err) {
-        console.error("Dashboard Load Error:", err);
+        console.error(err);
       }
     }
 
@@ -339,53 +357,49 @@
 
       await supabaseClient.from('matches').insert(fixtureList);
       alert("🎉 ১২টি ডাবল ফিক্সচার সফলভাবে তৈরি হয়েছে!");
-      toggleModal('modal-admin');
+      closeModal('modal-admin');
       loadDashboard();
     }
 
     async function openScoreModal(id, teamA, teamB) {
-      setTimeout(async () => {
-        const pass = prompt("এডমিন পাসওয়ার্ড দিন:");
-        if(pass !== "admin123") return alert("ভুল পাসওয়ার্ড!");
+      activeMatchId = id;
+      document.getElementById('score-modal-title').innerText = `${teamA} vs ${teamB}`;
 
-        activeMatchId = id;
-        document.getElementById('score-modal-title').innerText = `${teamA} vs ${teamB}`;
+      const { data: match } = await supabaseClient.from('matches').select('*').eq('id', id).single();
+      const container = document.getElementById('submatches-input-container');
+      
+      let html = '';
+      let details = match.details || [
+        {pa: 'Player 1', pb: 'Player 1', sa: 0, sb: 0},
+        {pa: 'Player 2', pb: 'Player 2', sa: 0, sb: 0},
+        {pa: 'Player 3', pb: 'Player 3', sa: 0, sb: 0},
+        {pa: 'Player 4', pb: 'Player 4', sa: 0, sb: 0},
+        {pa: 'Player 5', pb: 'Player 5', sa: 0, sb: 0}
+      ];
 
-        const { data: match } = await supabaseClient.from('matches').select('*').eq('id', id).single();
-        const container = document.getElementById('submatches-input-container');
-        
-        let html = '';
-        let details = match.details || [
-          {pa: 'Player 1', pb: 'Player 1', sa: 0, sb: 0},
-          {pa: 'Player 2', pb: 'Player 2', sa: 0, sb: 0},
-          {pa: 'Player 3', pb: 'Player 3', sa: 0, sb: 0},
-          {pa: 'Player 4', pb: 'Player 4', sa: 0, sb: 0},
-          {pa: 'Player 5', pb: 'Player 5', sa: 0, sb: 0}
-        ];
-
-        details.forEach((d, i) => {
-          html += `
-            <div class="bg-slate-900 p-2.5 rounded border border-slate-700 space-y-2">
-              <span class="text-xs font-bold text-emerald-400">Match ${i+1} Setup</span>
-              <div class="flex gap-2 text-xs">
-                <input type="text" value="${d.pa}" class="pa-${i+1} w-1/2 bg-slate-800 border border-slate-600 rounded p-1.5 text-white">
-                <input type="text" value="${d.pb}" class="pb-${i+1} w-1/2 bg-slate-800 border border-slate-600 rounded p-1.5 text-white">
-              </div>
-              <div class="flex items-center justify-between text-xs pt-1">
-                <span class="text-slate-400">Score Input:</span>
-                <div class="flex items-center gap-2">
-                  <input type="number" min="0" value="${d.sa}" class="sa-${i+1} w-12 bg-slate-800 text-center border border-slate-600 rounded p-1 text-white">
-                  <span>-</span>
-                  <input type="number" min="0" value="${d.sb}" class="sb-${i+1} w-12 bg-slate-800 text-center border border-slate-600 rounded p-1 text-white">
-                </div>
+      details.forEach((d, i) => {
+        html += `
+          <div class="bg-slate-900 p-2.5 rounded border border-slate-700 space-y-2">
+            <span class="text-xs font-bold text-emerald-400">Match ${i+1} Setup</span>
+            <div class="flex gap-2 text-xs">
+              <input type="text" value="${d.pa}" class="pa-${i+1} w-1/2 bg-slate-800 border border-slate-600 rounded p-1.5 text-white">
+              <input type="text" value="${d.pb}" class="pb-${i+1} w-1/2 bg-slate-800 border border-slate-600 rounded p-1.5 text-white">
+            </div>
+            <div class="flex items-center justify-between text-xs pt-1">
+              <span class="text-slate-400">Score Input:</span>
+              <div class="flex items-center gap-2">
+                <input type="number" min="0" value="${d.sa}" class="sa-${i+1} w-12 bg-slate-800 text-center border border-slate-600 rounded p-1 text-white">
+                <span>-</span>
+                <input type="number" min="0" value="${d.sb}" class="sb-${i+1} w-12 bg-slate-800 text-center border border-slate-600 rounded p-1 text-white">
               </div>
             </div>
-          `;
-        });
+          </div>
+        `;
+      });
 
-        container.innerHTML = html;
-        toggleModal('modal-score');
-      }, 50);
+      container.innerHTML = html;
+      document.getElementById('modal-score').classList.remove('hidden');
+      document.getElementById('modal-score').classList.add('flex');
     }
 
     async function saveMatchScore() {
@@ -404,41 +418,4 @@
         details.push({ pa, pb, sa, sb });
       }
 
-      await supabaseClient.from('matches').update({
-        score_a: winsA,
-        score_b: winsB,
-        status: 'Completed',
-        details: details
-      }).eq('id', activeMatchId);
-
-      await updateStandings();
-
-      alert("🎉 স্কোর ও ফিক্সচার আপডেট করা হয়েছে!");
-      toggleModal('modal-score');
-      loadDashboard();
-    }
-
-    async function updateStandings() {
-      const { data: teams } = await supabaseClient.from('teams').select('*');
-      const { data: matches } = await supabaseClient.from('matches').select('*').eq('status', 'Completed');
-
-      for(let t of teams) {
-        let mp=0, w=0, l=0, gf=0, ga=0, pts=0;
-
-        matches.forEach(m => {
-          if(m.team_a === t.team_name) {
-            mp++;
-            gf += m.score_a;
-            ga += m.score_b;
-            if(m.score_a > m.score_b) { w++; pts += 3; }
-            else if(m.score_b > m.score_a) { l++; }
-          } else if(m.team_b === t.team_name) {
-            mp++;
-            gf += m.score_b;
-            ga += m.score_a;
-            if(m.score_b > m.score_a) { w++; pts += 3; }
-            else if(m.score_a > m.score_b) { l++; }
-          }
-        });
-
-  
+      await supabaseClient.from('matc
