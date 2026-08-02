@@ -3,108 +3,150 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>eFootball Tournament Dashboard</title>
+  <title>eFootball 5v5 Championship</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-slate-900 text-white font-sans min-h-screen pb-12">
+<body class="bg-slate-900 text-white font-sans min-h-screen pb-24">
 
-  <!-- Header / Navbar -->
-  <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-50 px-4 py-3 shadow-lg">
-    <div class="max-w-4xl mx-auto flex justify-between items-center">
+  <!-- Header -->
+  <header class="bg-slate-800 border-b border-slate-700 sticky top-0 z-40 px-4 py-3 shadow-lg">
+    <div class="max-w-5xl mx-auto flex justify-between items-center">
       <div class="flex items-center space-x-2">
         <i class="fa-solid fa-gamepad text-emerald-400 text-2xl"></i>
         <h1 class="text-lg md:text-xl font-bold tracking-wide">eFootball Championship</h1>
       </div>
-      <button onclick="toggleModal('modal-register')" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-lg text-sm transition-all shadow-md">
-        <i class="fa-solid fa-user-plus mr-1"></i> ক্যাপ্টেন রেজিস্টার
-      </button>
+      <div class="text-xs bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold px-3 py-1.5 rounded-lg">
+        🟢 Registration Closed
+      </div>
     </div>
   </header>
 
-  <div class="max-w-4xl mx-auto px-4 mt-6 space-y-8">
+  <div class="max-w-5xl mx-auto px-4 mt-6 space-y-8">
 
     <!-- Hero Banner -->
     <div class="bg-gradient-to-r from-emerald-900/40 to-slate-800 border border-emerald-500/30 rounded-2xl p-6 text-center shadow-xl">
-      <h2 class="text-2xl md:text-3xl font-extrabold text-emerald-400 mb-2">OFFICIAL TOURNAMENT DASHBOARD</h2>
-      <p class="text-slate-300 text-sm md:text-base">নিবন্ধিত টিমগুলোর পয়েন্ট টেবিল ও স্কোয়াড লিস্ট</p>
+      <h2 class="text-2xl md:text-3xl font-extrabold text-emerald-400 mb-1">OFFICIAL 5v5 CREW BATTLE DASHBOARD</h2>
+      <p class="text-slate-300 text-xs md:text-sm">ডাবল রাউন্ড-রবিন ফিক্সচার, রিয়েল-টাইম পয়েন্ট টেবিল ও স্কোয়াড তথ্য</p>
     </div>
 
     <!-- Points Table -->
-    <section class="bg-slate-800 rounded-xl p-5 border border-slate-700 shadow-md">
-      <h3 class="text-xl font-bold text-emerald-400 mb-4 flex items-center gap-2">
+    <section class="bg-slate-800 rounded-xl p-4 md:p-5 border border-slate-700 shadow-md">
+      <h3 class="text-lg md:text-xl font-bold text-emerald-400 mb-4 flex items-center gap-2">
         <i class="fa-solid fa-trophy"></i> পয়েন্ট টেবিল (Points Table)
       </h3>
       <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm">
-          <thead class="bg-slate-700/50 text-slate-300 uppercase text-xs">
+        <table class="w-full text-center text-xs md:text-sm">
+          <thead class="bg-slate-700/60 text-slate-300 uppercase text-[10px] md:text-xs">
             <tr>
-              <th class="p-3">টিম</th>
-              <th class="p-3 text-center">ক্যাপ্টেন</th>
-              <th class="p-3 text-center">প্লেয়ার সংখ্যা</th>
+              <th class="p-2.5 text-left">টিম</th>
+              <th class="p-2.5">MP</th>
+              <th class="p-2.5">W</th>
+              <th class="p-2.5">L</th>
+              <th class="p-2.5">GF</th>
+              <th class="p-2.5">GA</th>
+              <th class="p-2.5">GD</th>
+              <th class="p-2.5 font-bold text-emerald-400">PTS</th>
             </tr>
           </thead>
-          <tbody id="teams-list" class="divide-y divide-slate-700/50">
-            <tr>
-              <td colspan="3" class="text-center p-4 text-slate-400">টিমের ডাটা লোড হচ্ছে...</td>
-            </tr>
+          <tbody id="points-table-body" class="divide-y divide-slate-700/50">
+            <tr><td colspan="8" class="p-4 text-slate-400">ডাটা লোড হচ্ছে...</td></tr>
           </tbody>
         </table>
       </div>
     </section>
 
+    <!-- Fixtures Section -->
+    <section class="bg-slate-800 rounded-xl p-4 md:p-5 border border-slate-700 shadow-md">
+      <h3 class="text-lg md:text-xl font-bold text-emerald-400 mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-calendar-days"></i> টুর্নামেন্ট ফিক্সচার (Double Round-Robin Matches)
+      </h3>
+      <div id="fixtures-container" class="space-y-4">
+        <p class="text-slate-400 text-sm text-center">ফিক্সচার এখনও তৈরি করা হয়নি। এডমিন থেকে জেনারেট করুন।</p>
+      </div>
+    </section>
+
+    <!-- Grand Final Banner -->
+    <section class="bg-gradient-to-r from-amber-900/30 via-slate-800 to-amber-900/30 rounded-xl p-5 border border-amber-500/40 text-center shadow-lg">
+      <h3 class="text-lg font-bold text-amber-400 mb-2 flex justify-center items-center gap-2">
+        <i class="fa-solid fa-crown text-xl"></i> GRAND FINAL (1v1 Direct Showdown)
+      </h3>
+      <p class="text-xs text-slate-300 mb-3">পয়েন্ট টেবিলের সেরা ২ টিম মুখোমুখি লড়বে ফাইনাল ট্রফির জন্য!</p>
+      <div id="grand-final-box" class="bg-slate-900/80 p-4 rounded-xl border border-slate-700 inline-block min-w-[280px]">
+        <span class="text-slate-400 text-xs font-semibold">Top #1 vs Top #2 (অপেক্ষা করুন)</span>
+      </div>
+    </section>
+
+    <!-- Tournament Rules -->
+    <section class="bg-slate-800 rounded-xl p-4 md:p-5 border border-slate-700 shadow-md">
+      <h3 class="text-lg md:text-xl font-bold text-emerald-400 mb-3 flex items-center gap-2">
+        <i class="fa-solid fa-book-bookmark"></i> টুর্নামেন্ট নিয়মাবলী (Tournament Rules)
+      </h3>
+      <ul id="rules-list" class="list-disc list-inside space-y-2 text-xs md:text-sm text-slate-300 leading-relaxed">
+        <li>প্রতিটি ক্রু ব্যাটেলে ৫টি ১v১ ম্যাচ অনুষ্ঠিত হবে।</li>
+        <li>যে টিম ৩টি বা তার বেশি ম্যাচে জিতবে, তারা ক্রু ব্যাটেলে জয়ী হবে এবং ৩ পয়েন্ট পাবে।</li>
+        <li>ম্যাচ টাই বা ড্র গ্রহণযোগ্য নয়; প্রতিটি ইন্ডিভিজুয়াল ম্যাচের এক্সট্রা টাইম/পেনাল্টি প্রযোজ্য।</li>
+      </ul>
+    </section>
+
   </div>
 
-  <!-- Registration Modal -->
-  <div id="modal-register" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-      <button onclick="toggleModal('modal-register')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+  <!-- Admin Floating Trigger -->
+  <div class="fixed bottom-4 right-4 z-40">
+    <button onclick="promptAdmin()" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 px-3.5 py-2.5 rounded-full text-xs font-bold border border-emerald-500/40 shadow-2xl flex items-center gap-2">
+      <i class="fa-solid fa-user-shield text-base"></i> Admin Control
+    </button>
+  </div>
+
+  <!-- Admin Modal -->
+  <div id="modal-admin" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <button onclick="toggleModal('modal-admin')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
         <i class="fa-solid fa-xmark text-xl"></i>
       </button>
       <h3 class="text-xl font-bold text-emerald-400 flex items-center gap-2">
-        <i class="fa-solid fa-shield-halved"></i> টিম রেজিস্ট্রেশন
+        <i class="fa-solid fa-sliders"></i> Admin Control Center
       </h3>
-      
-      <form id="reg-form" onsubmit="handleRegistration(event)" class="space-y-3">
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">টিমের নাম (Team Name)</label>
-          <input type="text" id="reg-team" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:border-emerald-500 focus:outline-none" placeholder="e.g. Cyber Strikers">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">ক্যাপ্টেনের নাম</label>
-          <input type="text" id="reg-captain" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:border-emerald-500 focus:outline-none" placeholder="ক্যাপ্টেনের নাম">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">ক্যাপ্টেনের eFootball ID</label>
-          <input type="text" id="reg-captain-id" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm focus:border-emerald-500 focus:outline-none" placeholder="Game ID">
-        </div>
 
-        <hr class="border-slate-700 my-2">
-        <h4 class="text-sm font-bold text-slate-200">স্কোয়াড মেম্বার (বাকি প্লেয়ারগণ)</h4>
-        
-        <div id="players-input-container" class="space-y-2">
-          <!-- Dynamic Player Inputs -->
-        </div>
-
-        <button type="button" onclick="addPlayerInput()" class="w-full bg-slate-700 hover:bg-slate-600 text-xs text-emerald-400 py-2 rounded-lg font-semibold border border-slate-600">
-          + আরও প্লেয়ার যোগ করুন (সর্বোচ্চ ৭ জন)
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <button onclick="promptFixtureSettings()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-lg text-xs shadow">
+          ⚡ ফিক্সচার ডেট সেট করে তৈরি করুন
         </button>
-
-        <button type="submit" id="btn-submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3 rounded-lg text-sm transition-all shadow-lg mt-4">
-          রেজিস্ট্রেশন জমা দিন
+        <button onclick="promptEditRules()" class="bg-slate-700 hover:bg-slate-600 text-emerald-400 font-semibold py-2.5 rounded-lg text-xs border border-slate-600">
+          📜 নিয়মাবলী (Rules) এডিট করুন
         </button>
-      </form>
+      </div>
+
+      <hr class="border-slate-700">
+      <h4 class="text-sm font-bold text-slate-300">নিবন্ধিত টিমের তালিকা (স্কোয়াড ডিলিট/ভিউ):</h4>
+      <div id="admin-teams-list" class="space-y-2 max-h-40 overflow-y-auto text-xs"></div>
+    </div>
+  </div>
+
+  <!-- 5v5 Score & Swap Entry Modal -->
+  <div id="modal-score" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+      <button onclick="toggleModal('modal-score')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+        <i class="fa-solid fa-xmark text-xl"></i>
+      </button>
+      <h3 class="text-lg font-bold text-emerald-400" id="score-modal-title">Match Setup & Score Entry</h3>
+      <p class="text-xs text-slate-400">প্লেয়ার সোয়াপ করতে নাম এডিট করুন এবং নিচে স্কোর ইনপুট দিন:</p>
+
+      <div class="space-y-3" id="submatches-input-container"></div>
+
+      <button onclick="saveMatchScore()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2.5 rounded-lg text-sm shadow">
+        ফলাফল ও ফিক্সচার সেভ করুন
+      </button>
     </div>
   </div>
 
   <script>
-    // Supabase Configuration
     const SUPABASE_URL = "https://cureynmwzbafajcmxped.supabase.co";
     const SUPABASE_KEY = "sb_publishable_j74BjQ3DQI-7Zt4Mupvnlw_0gU4EEP8";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let playerNum = 1;
+    let activeMatchId = null;
 
     function toggleModal(id) {
       const modal = document.getElementById(id);
@@ -112,98 +154,290 @@
       modal.classList.toggle('flex');
     }
 
-    function addPlayerInput() {
-      if(playerNum >= 7) {
-        alert("সর্বোচ্চ ৭ জন প্লেয়ার যুক্ত করা যাবে!");
-        return;
-      }
-      playerNum++;
-      const container = document.getElementById('players-input-container');
-      const div = document.createElement('div');
-      div.className = "flex gap-2";
-      div.innerHTML = `
-        <input type="text" placeholder="প্লেয়ার ${playerNum} নাম" class="p-name w-1/2 bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs focus:border-emerald-500 focus:outline-none" required>
-        <input type="text" placeholder="eFootball ID" class="p-id w-1/2 bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs focus:border-emerald-500 focus:outline-none" required>
-      `;
-      container.appendChild(div);
-    }
-
-    // Initialize with 4 player inputs
-    for(let i=0; i<4; i++) { addPlayerInput(); }
-
-    async function handleRegistration(e) {
-      e.preventDefault();
-      const btn = document.getElementById('btn-submit');
-      btn.innerText = "প্রসেস হচ্ছে...";
-      btn.disabled = true;
-
-      const teamName = document.getElementById('reg-team').value.trim();
-      const captainName = document.getElementById('reg-captain').value.trim();
-      const captainId = document.getElementById('reg-captain-id').value.trim();
-
-      try {
-        // Insert Team
-        const { data: teamData, error: teamErr } = await supabaseClient
-          .from('teams')
-          .insert([{ team_name: teamName, captain_name: captainName, captain_id: captainId }])
-          .select();
-
-        if (teamErr) throw teamErr;
-
-        const teamId = teamData[0].id;
-
-        // Collect Players
-        const playerNames = document.querySelectorAll('.p-name');
-        const playerIds = document.querySelectorAll('.p-id');
-        const playersList = [];
-
-        playerNames.forEach((input, index) => {
-          if(input.value.trim() !== '') {
-            playersList.push({
-              team_id: teamId,
-              player_name: input.value.trim(),
-              player_game_id: playerIds[index].value.trim()
-            });
-          }
-        });
-
-        if(playersList.length > 0) {
-          const { error: playErr } = await supabaseClient.from('players').insert(playersList);
-          if (playErr) throw playErr;
-        }
-
-        alert("🎉 রেজিস্ট্রেশন সফল হয়েছে!");
-        location.reload();
-
-      } catch (err) {
-        alert("ভুল হয়েছে: " + err.message);
-      } finally {
-        btn.innerText = "রেজিস্ট্রেশন জমা দিন";
-        btn.disabled = false;
+    function promptAdmin() {
+      const pass = prompt("গোপন এডমিন পাসওয়ার্ড দিন:");
+      if(pass === "admin123") {
+        loadAdminTeams();
+        toggleModal('modal-admin');
+      } else if(pass !== null) {
+        alert("ভুল পাসওয়ার্ড!");
       }
     }
 
-    async function loadTeams() {
-      const container = document.getElementById('teams-list');
-      const { data: teams, error } = await supabaseClient
+    async function loadDashboard() {
+      // Standings Table
+      const { data: teams } = await supabaseClient
         .from('teams')
-        .select('*, players(id)');
+        .select('*')
+        .order('pts', { ascending: false })
+        .order('gf', { ascending: false });
 
-      if(error || !teams || teams.length === 0) {
-        container.innerHTML = `<tr><td colspan="3" class="text-center p-4 text-slate-400">এখনো কোনো টিম রেজিস্টার করেনি!</td></tr>`;
-        return;
+      const tbody = document.getElementById('points-table-body');
+      if(!teams || teams.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-slate-400">কোনো টিম পাওয়া যায়নি।</td></tr>`;
+      } else {
+        tbody.innerHTML = teams.map(t => {
+          const gd = (t.gf || 0) - (t.ga || 0);
+          return `
+            <tr class="hover:bg-slate-700/30 transition-all">
+              <td class="p-2.5 text-left font-bold text-emerald-400">${t.team_name}</td>
+              <td class="p-2.5">${t.mp || 0}</td>
+              <td class="p-2.5">${t.w || 0}</td>
+              <td class="p-2.5">${t.l || 0}</td>
+              <td class="p-2.5">${t.gf || 0}</td>
+              <td class="p-2.5">${t.ga || 0}</td>
+              <td class="p-2.5 font-semibold ${gd >= 0 ? 'text-slate-200':'text-rose-400'}">${gd > 0 ? '+'+gd : gd}</td>
+              <td class="p-2.5 font-extrabold text-emerald-400 text-sm">${t.pts || 0}</td>
+            </tr>
+          `;
+        }).join('');
+
+        // Grand Final UI
+        if(teams.length >= 2) {
+          document.getElementById('grand-final-box').innerHTML = `
+            <div class="flex items-center justify-center gap-4 text-sm font-extrabold">
+              <span class="text-emerald-400">${teams[0].team_name}</span>
+              <span class="text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded">VS</span>
+              <span class="text-emerald-400">${teams[1].team_name}</span>
+            </div>
+          `;
+        }
       }
 
+      // Fixtures
+      const { data: matches } = await supabaseClient.from('matches').select('*').order('id', { ascending: true });
+      const fixContainer = document.getElementById('fixtures-container');
+      if(!matches || matches.length === 0) {
+        fixContainer.innerHTML = `<p class="text-slate-400 text-sm text-center">ফিক্সচার এখনও তৈরি করা হয়নি।</p>`;
+      } else {
+        fixContainer.innerHTML = matches.map(m => {
+          let subDetails = '';
+          if(m.details) {
+            subDetails = `<div class="mt-2 border-t border-slate-800 pt-2 grid grid-cols-1 md:grid-cols-2 gap-1 text-[11px] text-slate-300">`;
+            m.details.forEach((d, idx) => {
+              subDetails += `<div class="bg-slate-950/40 p-1.5 rounded flex justify-between">
+                <span>M${idx+1}: ${d.pa} vs ${d.pb}</span>
+                <span class="font-bold text-emerald-400">${d.sa} - ${d.sb}</span>
+              </div>`;
+            });
+            subDetails += `</div>`;
+          }
+
+          return `
+            <div class="bg-slate-900 border border-slate-700 rounded-xl p-3 shadow">
+              <div class="flex flex-col md:flex-row justify-between items-center gap-3">
+                <div class="flex flex-col">
+                  <span class="text-[11px] text-emerald-400 font-semibold"><i class="fa-regular fa-calendar mr-1"></i> ${m.match_date || 'TBD'}</span>
+                  <div class="flex items-center gap-3 mt-1">
+                    <span class="font-bold text-white text-sm">${m.team_a}</span>
+                    <span class="bg-slate-800 text-emerald-300 font-extrabold px-3 py-1 rounded border border-slate-700 text-xs">
+                      ${m.score_a} - ${m.score_b}
+                    </span>
+                    <span class="font-bold text-white text-sm">${m.team_b}</span>
+                  </div>
+                </div>
+                <div class="text-xs text-slate-400 flex items-center gap-2">
+                  <span>Status: <strong class="${m.status === 'Completed' ? 'text-emerald-400':'text-amber-400'}">${m.status}</strong></span>
+                  <button onclick="openScoreModal(${m.id}, '${m.team_a}', '${m.team_b}')" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 px-2.5 py-1 rounded text-[11px]">
+                    ⚙️ Score/Swap Entry
+                  </button>
+                </div>
+              </div>
+              ${subDetails}
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    async function loadAdminTeams() {
+      const { data: teams } = await supabaseClient.from('teams').select('*');
+      const container = document.getElementById('admin-teams-list');
+      if(!teams || teams.length === 0) return container.innerHTML = "<p class='text-slate-400'>কোনো টিম নেই</p>";
       container.innerHTML = teams.map(t => `
-        <tr class="hover:bg-slate-700/30 transition-all">
-          <td class="p-3 font-bold text-emerald-400">${t.team_name}</td>
-          <td class="p-3 text-center text-slate-300">${t.captain_name}</td>
-          <td class="p-3 text-center text-slate-400">${(t.players ? t.players.length : 0) + 1} জন</td>
-        </tr>
+        <div class="flex justify-between items-center bg-slate-900 p-2 rounded border border-slate-700">
+          <span><strong>${t.team_name}</strong> (${t.captain_name})</span>
+          <button onclick="deleteTeam(${t.id})" class="text-rose-400 hover:text-rose-300"><i class="fa-solid fa-trash"></i></button>
+        </div>
       `).join('');
     }
 
-    loadTeams();
-  </script>
-</body>
-</html>
+    async function deleteTeam(id) {
+      if(confirm("টিমটি মুছে ফেলতে চান?")) {
+        await supabaseClient.from('teams').delete().eq('id', id);
+        loadAdminTeams();
+        loadDashboard();
+      }
+    }
+
+    async function promptFixtureSettings() {
+      let startDateStr = prompt("ম্যাচ শুরুর তারিখ দিন (যেমন: 2026-08-04 বা 4 August):", "2026-08-04");
+      if(!startDateStr) return;
+
+      let intervalDays = prompt("প্রতিটি ম্যাচের মধ্যে কত দিনের ব্যবধান হবে? (যেমন: ২ দিন পর পর হলে '2' লিখুন):", "2");
+      if(!intervalDays) return;
+
+      generateFixturesWithDate(startDateStr, parseInt(intervalDays) || 2);
+    }
+
+    async function generateFixturesWithDate(startDateStr, interval) {
+      const { data: teams } = await supabaseClient.from('teams').select('*, players(player_name)');
+      if(!teams || teams.length < 4) return alert("ডাবল ফিক্সচারের জন্য ৪টি টিম লাগবে!");
+
+      await supabaseClient.from('matches').delete().neq('id', 0);
+
+      let fixtureList = [];
+      let baseDate = new Date(startDateStr);
+      if (isNaN(baseDate.getTime())) baseDate = new Date(); // Fallback to today if invalid
+
+      let matchCounter = 0;
+
+      // 12 Double Round-Robin Matches
+      for(let round=1; round<=2; round++) {
+        for(let i=0; i<teams.length; i++) {
+          for(let j=i+1; j<teams.length; j++) {
+            let pA = teams[i].players.map(p=>p.player_name);
+            let pB = teams[j].players.map(p=>p.player_name);
+
+            pA.unshift(teams[i].captain_name);
+            pB.unshift(teams[j].captain_name);
+
+            pA = pA.sort(() => 0.5 - Math.random()).slice(0, 5);
+            pB = pB.sort(() => 0.5 - Math.random()).slice(0, 5);
+
+            let subDetails = [];
+            for(let k=0; k<5; k++) {
+              subDetails.push({ pa: pA[k] || 'Player A', pb: pB[k] || 'Player B', sa: 0, sb: 0 });
+            }
+
+            // Calculate match date
+            let currentMatchDate = new Date(baseDate);
+            currentMatchDate.setDate(baseDate.getDate() + (matchCounter * interval));
+            let dateFormatted = currentMatchDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+            fixtureList.push({
+              team_a: teams[i].team_name,
+              team_b: teams[j].team_name,
+              score_a: 0,
+              score_b: 0,
+              status: 'Pending',
+              match_date: dateFormatted,
+              details: subDetails
+            });
+
+            matchCounter++;
+          }
+        }
+      }
+
+      await supabaseClient.from('matches').insert(fixtureList);
+      alert("🎉 ১২টি ডাবল ফিক্সচার নির্দিষ্ট ডেট অনুযায়ী তৈরি হয়েছে!");
+      toggleModal('modal-admin');
+      loadDashboard();
+    }
+
+    async function openScoreModal(id, teamA, teamB) {
+      const pass = prompt("এডমিন পাসওয়ার্ড দিন:");
+      if(pass !== "admin123") return alert("ভুল পাসওয়ার্ড!");
+
+      activeMatchId = id;
+      document.getElementById('score-modal-title').innerText = `${teamA} vs ${teamB}`;
+
+      const { data: match } = await supabaseClient.from('matches').select('*').eq('id', id).single();
+      const container = document.getElementById('submatches-input-container');
+      
+      let html = '';
+      let details = match.details || [
+        {pa: 'Player 1', pb: 'Player 1', sa: 0, sb: 0},
+        {pa: 'Player 2', pb: 'Player 2', sa: 0, sb: 0},
+        {pa: 'Player 3', pb: 'Player 3', sa: 0, sb: 0},
+        {pa: 'Player 4', pb: 'Player 4', sa: 0, sb: 0},
+        {pa: 'Player 5', pb: 'Player 5', sa: 0, sb: 0}
+      ];
+
+      details.forEach((d, i) => {
+        html += `
+          <div class="bg-slate-900 p-2.5 rounded border border-slate-700 space-y-2">
+            <span class="text-xs font-bold text-emerald-400">Match ${i+1} Setup</span>
+            <div class="flex gap-2 text-xs">
+              <input type="text" value="${d.pa}" class="pa-${i+1} w-1/2 bg-slate-800 border border-slate-600 rounded p-1.5 focus:outline-none">
+              <input type="text" value="${d.pb}" class="pb-${i+1} w-1/2 bg-slate-800 border border-slate-600 rounded p-1.5 focus:outline-none">
+            </div>
+            <div class="flex items-center justify-between text-xs pt-1">
+              <span class="text-slate-400">Score Input:</span>
+              <div class="flex items-center gap-2">
+                <input type="number" min="0" value="${d.sa}" class="sa-${i+1} w-12 bg-slate-800 text-center border border-slate-600 rounded p-1">
+                <span>-</span>
+                <input type="number" min="0" value="${d.sb}" class="sb-${i+1} w-12 bg-slate-800 text-center border border-slate-600 rounded p-1">
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+      toggleModal('modal-score');
+    }
+
+    async function saveMatchScore() {
+      let details = [];
+      let winsA = 0, winsB = 0;
+
+      for(let i=1; i<=5; i++) {
+        let pa = document.querySelector(`.pa-${i}`).value.trim();
+        let pb = document.querySelector(`.pb-${i}`).value.trim();
+        let sa = parseInt(document.querySelector(`.sa-${i}`).value) || 0;
+        let sb = parseInt(document.querySelector(`.sa-${i}`).value) || 0;
+
+        if(sa > sb) winsA++;
+        else if(sb > sa) winsB++;
+
+        details.push({ pa, pb, sa, sb });
+      }
+
+      await supabaseClient.from('matches').update({
+        score_a: winsA,
+        score_b: winsB,
+        status: 'Completed',
+        details: details
+      }).eq('id', activeMatchId);
+
+      await updateStandings();
+
+      alert("🎉 স্কোর ও ফিক্সচার আপডেট করা হয়েছে!");
+      toggleModal('modal-score');
+      loadDashboard();
+    }
+
+    async function updateStandings() {
+      const { data: teams } = await supabaseClient.from('teams').select('*');
+      const { data: matches } = await supabaseClient.from('matches').select('*').eq('status', 'Completed');
+
+      for(let t of teams) {
+        let mp=0, w=0, l=0, gf=0, ga=0, pts=0;
+
+        matches.forEach(m => {
+          if(m.team_a === t.team_name) {
+            mp++;
+            gf += m.score_a;
+            ga += m.score_b;
+            if(m.score_a > m.score_b) { w++; pts += 3; }
+            else if(m.score_b > m.score_a) { l++; }
+          } else if(m.team_b === t.team_name) {
+            mp++;
+            gf += m.score_b;
+            ga += m.score_a;
+            if(m.score_b > m.score_a) { w++; pts += 3; }
+            else if(m.score_a > m.score_b) { l++; }
+          }
+        });
+
+        await supabaseClient.from('teams').update({ mp, w, l, gf, ga, pts }).eq('id', t.id);
+      }
+    }
+
+    function promptEditRules() {
+      const newRules = prompt("টুর্নামেন্টের নতুন রুলস লিখুন (কমার সাহায্যে আলাদা করুন):", "প্রতিটি ক্রু ব্যাটেলে ৫টি ১v১ ম্যাচ হবে, যে টিম ৩টি জিতবে তারা জয়ী ৩ পয়েন্ট পাবে");
+      if(newRules) {
+        const rulesArray = newRules.split(',');
+        document.getElementById('rules-list').innerHTM
