@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>eFootball 5v5 Championship</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Supabase CDN Fix -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
@@ -164,31 +163,30 @@
   <script>
     const SUPABASE_URL = "https://cureynmwzbafajcmxped.supabase.co";
     const SUPABASE_KEY = "sb_publishable_j74BjQ3DQI-7Zt4Mupvnlw_0gU4EEP8";
-    let supabaseClient;
+    let supabaseClient = null;
     let activeMatchId = null;
 
-    function initSupabase() {
-      if (window.supabase && window.supabase.createClient) {
+    function getSupabase() {
+      if (!supabaseClient && window.supabase && window.supabase.createClient) {
         supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-      } else {
-        console.error("Supabase library script load failed.");
       }
+      return supabaseClient;
     }
 
-    window.openLoginModal = function() {
+    function openLoginModal() {
       document.getElementById('modal-login').classList.remove('hidden');
       document.getElementById('modal-login').classList.add('flex');
-    };
+    }
 
-    window.closeModal = function(id) {
+    function closeModal(id) {
       document.getElementById(id).classList.remove('flex');
       document.getElementById(id).classList.add('hidden');
-    };
+    }
 
-    window.checkAdminLogin = function() {
+    function checkAdminLogin() {
       const pass = document.getElementById('admin-pass-input').value;
       if(pass === "admin123") {
-        window.closeModal('modal-login');
+        closeModal('modal-login');
         document.getElementById('admin-pass-input').value = "";
         loadAdminTeams();
         document.getElementById('modal-admin').classList.remove('hidden');
@@ -196,14 +194,14 @@
       } else {
         alert("ভুল পাসওয়ার্ড!");
       }
-    };
+    }
 
-    window.loadDashboard = async function() {
-      if(!supabaseClient) initSupabase();
-      if(!supabaseClient) return;
+    async function loadDashboard() {
+      const client = getSupabase();
+      if(!client) return;
 
       try {
-        const { data: teams } = await supabaseClient
+        const { data: teams } = await client
           .from('teams')
           .select('*')
           .order('pts', { ascending: false })
@@ -240,7 +238,7 @@
           }
         }
 
-        const { data: matches } = await supabaseClient.from('matches').select('*').order('id', { ascending: true });
+        const { data: matches } = await client.from('matches').select('*').order('id', { ascending: true });
         const fixContainer = document.getElementById('fixtures-container');
         if(!matches || matches.length === 0) {
           fixContainer.innerHTML = `<p class="text-slate-400 text-sm text-center">ফিক্সচার এখনও তৈরি করা হয়নি। এডমিন থেকে জেনারেট করুন।</p>`;
@@ -286,11 +284,12 @@
       } catch (err) {
         console.error(err);
       }
-    };
+    }
 
-    window.loadAdminTeams = async function() {
-      if(!supabaseClient) initSupabase();
-      const { data: teams } = await supabaseClient.from('teams').select('*');
+    async function loadAdminTeams() {
+      const client = getSupabase();
+      if(!client) return;
+      const { data: teams } = await client.from('teams').select('*');
       const container = document.getElementById('admin-teams-list');
       if(!teams || teams.length === 0) return container.innerHTML = "<p class='text-slate-400'>কোনো টিম নিবন্ধিত নেই</p>";
       container.innerHTML = teams.map(t => `
@@ -299,17 +298,18 @@
           <button onclick="deleteTeam(${t.id})" class="text-rose-400 hover:text-rose-300 cursor-pointer"><i class="fa-solid fa-trash"></i></button>
         </div>
       `).join('');
-    };
+    }
 
-    window.deleteTeam = async function(id) {
+    async function deleteTeam(id) {
+      const client = getSupabase();
       if(confirm("টিমটি মুছে ফেলতে চান?")) {
-        await supabaseClient.from('teams').delete().eq('id', id);
+        await client.from('teams').delete().eq('id', id);
         loadAdminTeams();
         loadDashboard();
       }
-    };
+    }
 
-    window.promptFixtureSettings = function() {
+    function promptFixtureSettings() {
       let startDateStr = prompt("ম্যাচ শুরুর তারিখ দিন (যেমন: 2026-08-04):", "2026-08-04");
       if(!startDateStr) return;
 
@@ -317,17 +317,18 @@
       if(!intervalDays) return;
 
       generateFixturesWithDate(startDateStr, parseInt(intervalDays) || 2);
-    };
+    }
 
     async function generateFixturesWithDate(startDateStr, interval) {
-      if(!supabaseClient) initSupabase();
-      const { data: teams, error: teamErr } = await supabaseClient.from('teams').select('*, players(player_name)');
+      const client = getSupabase();
+      if(!client) return;
+      const { data: teams, error: teamErr } = await client.from('teams').select('*, players(player_name)');
       
       if(teamErr || !teams || teams.length < 2) {
         return alert("ফিক্সচার বানাতে কমপক্ষে ২টি টিম লাগবে ডাটাবেজে!");
       }
 
-      await supabaseClient.from('matches').delete().neq('id', 0);
+      await client.from('matches').delete().neq('id', 0);
 
       let fixtureList = [];
       let baseDate = new Date(startDateStr);
@@ -371,23 +372,24 @@
         }
       }
 
-      const { error: matchErr } = await supabaseClient.from('matches').insert(fixtureList);
+      const { error: matchErr } = await client.from('matches').insert(fixtureList);
 
       if(matchErr) {
         alert("ফিক্সচার জেনারেট করতে সমস্যা হয়েছে: " + matchErr.message);
       } else {
         alert("🎉 ফিক্সচার সফলভাবে জেনারেট হয়েছে!");
-        window.closeModal('modal-admin');
+        closeModal('modal-admin');
         loadDashboard();
       }
     }
 
-    window.openScoreModal = async function(id, teamA, teamB) {
-      if(!supabaseClient) initSupabase();
+    async function openScoreModal(id, teamA, teamB) {
+      const client = getSupabase();
+      if(!client) return;
       activeMatchId = id;
       document.getElementById('score-modal-title').innerText = `${teamA} vs ${teamB}`;
 
-      const { data: match } = await supabaseClient.from('matches').select('*').eq('id', id).single();
+      const { data: match } = await client.from('matches').select('*').eq('id', id).single();
       const container = document.getElementById('submatches-input-container');
       
       let html = '';
@@ -412,10 +414,6 @@
               <div class="flex items-center gap-2">
                 <input type="number" min="0" value="${d.sa}" class="sa-${i+1} w-12 bg-slate-800 text-center border border-slate-600 rounded p-1 text-white">
                 <span>-</span>
-                <input type="number" min="0" value="${d.sb}" class="sb-${i+1 font-semibold">
-              <div class="flex items-center gap-2">
-                <input type="number" min="0" value="${d.sa}" class="sa-${i+1} w-12 bg-slate-800 text-center border border-slate-600 rounded p-1 text-white">
-                <span>-</span>
                 <input type="number" min="0" value="${d.sb}" class="sb-${i+1} w-12 bg-slate-800 text-center border border-slate-600 rounded p-1 text-white">
               </div>
             </div>
@@ -426,10 +424,11 @@
       container.innerHTML = html;
       document.getElementById('modal-score').classList.remove('hidden');
       document.getElementById('modal-score').classList.add('flex');
-    };
+    }
 
-    window.saveMatchScore = async function() {
-      if(!supabaseClient) initSupabase();
+    async function saveMatchScore() {
+      const client = getSupabase();
+      if(!client) return;
       let details = [];
       let winsA = 0, winsB = 0;
 
@@ -445,7 +444,7 @@
         details.push({ pa, pb, sa, sb });
       }
 
-      await supabaseClient.from('matches').update({
+      await client.from('matches').update({
         score_a: winsA,
         score_b: winsB,
         status: 'Completed',
@@ -455,14 +454,15 @@
       await updateStandings();
 
       alert("🎉 স্কোর ও ফিক্সচার আপডেট করা হয়েছে!");
-      window.closeModal('modal-score');
+      closeModal('modal-score');
       loadDashboard();
-    };
+    }
 
     async function updateStandings() {
-      if(!supabaseClient) initSupabase();
-      const { data: teams } = await supabaseClient.from('teams').select('*');
-      const { data: matches } = await supabaseClient.from('matches').select('*').eq('status', 'Completed');
+      const client = getSupabase();
+      if(!client) return;
+      const { data: teams } = await client.from('teams').select('*');
+      const { data: matches } = await client.from('matches').select('*').eq('status', 'Completed');
 
       if(!teams) return;
 
@@ -485,21 +485,20 @@
           }
         });
 
-        await supabaseClient.from('teams').update({ mp, w, l, gf, ga, pts }).eq('id', t.id);
+        await client.from('teams').update({ mp, w, l, gf, ga, pts }).eq('id', t.id);
       }
     }
 
-    window.promptEditRules = function() {
+    function promptEditRules() {
       const newRules = prompt("টুর্নামেন্টের নতুন রুলস লিখুন (কমার সাহায্যে আলাদা করুন):", "প্রতিটি ক্রু ব্যাঞ্চলে ৫টি ১v১ ম্যাচ হবে, যে টিম ৩টি জিতবে তারা জয়ী ৩ পয়েন্ট পাবে");
       if(newRules) {
         const rulesArray = newRules.split(',');
         document.getElementById('rules-list').innerHTML = rulesArray.map(r=>`<li>${r.trim()}</li>`).join('');
         alert("রুলস আপডেট করা হয়েছে!");
       }
-    };
+    }
 
     window.onload = function() {
-      initSupabase();
       loadDashboard();
     };
   </script>
