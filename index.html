@@ -119,12 +119,12 @@
       </div>
 
       <hr class="border-slate-700">
-      <h4 class="text-sm font-bold text-slate-300">নিবন্ধিত টিমের তালিকা (স্কোয়াড ডিলিট/ভিউ):</h4>
+      <h4 class="text-sm font-bold text-slate-300">নিবন্ধিত টিমের তালিকা:</h4>
       <div id="admin-teams-list" class="space-y-2 max-h-40 overflow-y-auto text-xs"></div>
     </div>
   </div>
 
-  <!-- 5v5 Score & Swap Entry Modal -->
+  <!-- Score Modal -->
   <div id="modal-score" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
     <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative max-h-[90vh] overflow-y-auto">
       <button onclick="toggleModal('modal-score')" class="absolute top-4 right-4 text-slate-400 hover:text-white">
@@ -150,103 +150,112 @@
 
     function toggleModal(id) {
       const modal = document.getElementById(id);
-      modal.classList.toggle('hidden');
-      modal.classList.toggle('flex');
+      if(!modal) return;
+      if (modal.classList.contains('hidden')) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      } else {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+      }
     }
 
     function promptAdmin() {
-      const pass = prompt("গোপন এডমিন পাসওয়ার্ড দিন:");
-      if(pass === "admin123") {
-        loadAdminTeams();
-        toggleModal('modal-admin');
-      } else if(pass !== null) {
-        alert("ভুল পাসওয়ার্ড!");
-      }
+      setTimeout(() => {
+        const pass = prompt("গোপন এডমিন পাসওয়ার্ড দিন:");
+        if(pass === "admin123") {
+          loadAdminTeams();
+          toggleModal('modal-admin');
+        } else if(pass !== null && pass !== "") {
+          alert("ভুল পাসওয়ার্ড!");
+        }
+      }, 50);
     }
 
     async function loadDashboard() {
-      // Standings Table
-      const { data: teams } = await supabaseClient
-        .from('teams')
-        .select('*')
-        .order('pts', { ascending: false })
-        .order('gf', { ascending: false });
+      try {
+        const { data: teams } = await supabaseClient
+          .from('teams')
+          .select('*')
+          .order('pts', { ascending: false })
+          .order('gf', { ascending: false });
 
-      const tbody = document.getElementById('points-table-body');
-      if(!teams || teams.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-slate-400">কোনো টিম পাওয়া যায়নি।</td></tr>`;
-      } else {
-        tbody.innerHTML = teams.map(t => {
-          const gd = (t.gf || 0) - (t.ga || 0);
-          return `
-            <tr class="hover:bg-slate-700/30 transition-all">
-              <td class="p-2.5 text-left font-bold text-emerald-400">${t.team_name}</td>
-              <td class="p-2.5">${t.mp || 0}</td>
-              <td class="p-2.5">${t.w || 0}</td>
-              <td class="p-2.5">${t.l || 0}</td>
-              <td class="p-2.5">${t.gf || 0}</td>
-              <td class="p-2.5">${t.ga || 0}</td>
-              <td class="p-2.5 font-semibold ${gd >= 0 ? 'text-slate-200':'text-rose-400'}">${gd > 0 ? '+'+gd : gd}</td>
-              <td class="p-2.5 font-extrabold text-emerald-400 text-sm">${t.pts || 0}</td>
-            </tr>
-          `;
-        }).join('');
+        const tbody = document.getElementById('points-table-body');
+        if(!teams || teams.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-slate-400">কোনো টিম পাওয়া যায়নি।</td></tr>`;
+        } else {
+          tbody.innerHTML = teams.map(t => {
+            const gd = (t.gf || 0) - (t.ga || 0);
+            return `
+              <tr class="hover:bg-slate-700/30 transition-all">
+                <td class="p-2.5 text-left font-bold text-emerald-400">${t.team_name}</td>
+                <td class="p-2.5">${t.mp || 0}</td>
+                <td class="p-2.5">${t.w || 0}</td>
+                <td class="p-2.5">${t.l || 0}</td>
+                <td class="p-2.5">${t.gf || 0}</td>
+                <td class="p-2.5">${t.ga || 0}</td>
+                <td class="p-2.5 font-semibold ${gd >= 0 ? 'text-slate-200':'text-rose-400'}">${gd > 0 ? '+'+gd : gd}</td>
+                <td class="p-2.5 font-extrabold text-emerald-400 text-sm">${t.pts || 0}</td>
+              </tr>
+            `;
+          }).join('');
 
-        // Grand Final UI
-        if(teams.length >= 2) {
-          document.getElementById('grand-final-box').innerHTML = `
-            <div class="flex items-center justify-center gap-4 text-sm font-extrabold">
-              <span class="text-emerald-400">${teams[0].team_name}</span>
-              <span class="text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded">VS</span>
-              <span class="text-emerald-400">${teams[1].team_name}</span>
-            </div>
-          `;
-        }
-      }
-
-      // Fixtures
-      const { data: matches } = await supabaseClient.from('matches').select('*').order('id', { ascending: true });
-      const fixContainer = document.getElementById('fixtures-container');
-      if(!matches || matches.length === 0) {
-        fixContainer.innerHTML = `<p class="text-slate-400 text-sm text-center">ফিক্সচার এখনও তৈরি করা হয়নি।</p>`;
-      } else {
-        fixContainer.innerHTML = matches.map(m => {
-          let subDetails = '';
-          if(m.details) {
-            subDetails = `<div class="mt-2 border-t border-slate-800 pt-2 grid grid-cols-1 md:grid-cols-2 gap-1 text-[11px] text-slate-300">`;
-            m.details.forEach((d, idx) => {
-              subDetails += `<div class="bg-slate-950/40 p-1.5 rounded flex justify-between">
-                <span>M${idx+1}: ${d.pa} vs ${d.pb}</span>
-                <span class="font-bold text-emerald-400">${d.sa} - ${d.sb}</span>
-              </div>`;
-            });
-            subDetails += `</div>`;
+          if(teams.length >= 2) {
+            document.getElementById('grand-final-box').innerHTML = `
+              <div class="flex items-center justify-center gap-4 text-sm font-extrabold">
+                <span class="text-emerald-400">${teams[0].team_name}</span>
+                <span class="text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded">VS</span>
+                <span class="text-emerald-400">${teams[1].team_name}</span>
+              </div>
+            `;
           }
+        }
 
-          return `
-            <div class="bg-slate-900 border border-slate-700 rounded-xl p-3 shadow">
-              <div class="flex flex-col md:flex-row justify-between items-center gap-3">
-                <div class="flex flex-col">
-                  <span class="text-[11px] text-emerald-400 font-semibold"><i class="fa-regular fa-calendar mr-1"></i> ${m.match_date || 'TBD'}</span>
-                  <div class="flex items-center gap-3 mt-1">
-                    <span class="font-bold text-white text-sm">${m.team_a}</span>
-                    <span class="bg-slate-800 text-emerald-300 font-extrabold px-3 py-1 rounded border border-slate-700 text-xs">
-                      ${m.score_a} - ${m.score_b}
-                    </span>
-                    <span class="font-bold text-white text-sm">${m.team_b}</span>
+        const { data: matches } = await supabaseClient.from('matches').select('*').order('id', { ascending: true });
+        const fixContainer = document.getElementById('fixtures-container');
+        if(!matches || matches.length === 0) {
+          fixContainer.innerHTML = `<p class="text-slate-400 text-sm text-center">ফিক্সচার এখনও তৈরি করা হয়নি। এডমিন থেকে জেনারেট করুন।</p>`;
+        } else {
+          fixContainer.innerHTML = matches.map(m => {
+            let subDetails = '';
+            if(m.details) {
+              subDetails = `<div class="mt-2 border-t border-slate-800 pt-2 grid grid-cols-1 md:grid-cols-2 gap-1 text-[11px] text-slate-300">`;
+              m.details.forEach((d, idx) => {
+                subDetails += `<div class="bg-slate-950/40 p-1.5 rounded flex justify-between">
+                  <span>M${idx+1}: ${d.pa} vs ${d.pb}</span>
+                  <span class="font-bold text-emerald-400">${d.sa} - ${d.sb}</span>
+                </div>`;
+              });
+              subDetails += `</div>`;
+            }
+
+            return `
+              <div class="bg-slate-900 border border-slate-700 rounded-xl p-3 shadow">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-3">
+                  <div class="flex flex-col">
+                    <span class="text-[11px] text-emerald-400 font-semibold"><i class="fa-regular fa-calendar mr-1"></i> ${m.match_date || 'TBD'}</span>
+                    <div class="flex items-center gap-3 mt-1">
+                      <span class="font-bold text-white text-sm">${m.team_a}</span>
+                      <span class="bg-slate-800 text-emerald-300 font-extrabold px-3 py-1 rounded border border-slate-700 text-xs">
+                        ${m.score_a} - ${m.score_b}
+                      </span>
+                      <span class="font-bold text-white text-sm">${m.team_b}</span>
+                    </div>
+                  </div>
+                  <div class="text-xs text-slate-400 flex items-center gap-2">
+                    <span>Status: <strong class="${m.status === 'Completed' ? 'text-emerald-400':'text-amber-400'}">${m.status}</strong></span>
+                    <button onclick="openScoreModal(${m.id}, '${m.team_a}', '${m.team_b}')" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 px-2.5 py-1 rounded text-[11px]">
+                      ⚙️ Score/Swap Entry
+                    </button>
                   </div>
                 </div>
-                <div class="text-xs text-slate-400 flex items-center gap-2">
-                  <span>Status: <strong class="${m.status === 'Completed' ? 'text-emerald-400':'text-amber-400'}">${m.status}</strong></span>
-                  <button onclick="openScoreModal(${m.id}, '${m.team_a}', '${m.team_b}')" class="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 px-2.5 py-1 rounded text-[11px]">
-                    ⚙️ Score/Swap Entry
-                  </button>
-                </div>
+                ${subDetails}
               </div>
-              ${subDetails}
-            </div>
-          `;
-        }).join('');
+            `;
+          }).join('');
+        }
+      } catch (err) {
+        console.error("Dashboard Load Error:", err);
       }
     }
 
@@ -271,10 +280,10 @@
     }
 
     async function promptFixtureSettings() {
-      let startDateStr = prompt("ম্যাচ শুরুর তারিখ দিন (যেমন: 2026-08-04 বা 4 August):", "2026-08-04");
+      let startDateStr = prompt("ম্যাচ শুরুর তারিখ দিন (যেমন: 2026-08-04):", "2026-08-04");
       if(!startDateStr) return;
 
-      let intervalDays = prompt("প্রতিটি ম্যাচের মধ্যে কত দিনের ব্যবধান হবে? (যেমন: ২ দিন পর পর হলে '2' লিখুন):", "2");
+      let intervalDays = prompt("কত দিন পর পর ম্যাচ হবে? (যেমন: ২ দিন পর পর হলে '2' লিখুন):", "2");
       if(!intervalDays) return;
 
       generateFixturesWithDate(startDateStr, parseInt(intervalDays) || 2);
@@ -288,16 +297,15 @@
 
       let fixtureList = [];
       let baseDate = new Date(startDateStr);
-      if (isNaN(baseDate.getTime())) baseDate = new Date(); // Fallback to today if invalid
+      if (isNaN(baseDate.getTime())) baseDate = new Date();
 
       let matchCounter = 0;
 
-      // 12 Double Round-Robin Matches
       for(let round=1; round<=2; round++) {
         for(let i=0; i<teams.length; i++) {
           for(let j=i+1; j<teams.length; j++) {
-            let pA = teams[i].players.map(p=>p.player_name);
-            let pB = teams[j].players.map(p=>p.player_name);
+            let pA = teams[i].players ? teams[i].players.map(p=>p.player_name) : [];
+            let pB = teams[j].players ? teams[j].players.map(p=>p.player_name) : [];
 
             pA.unshift(teams[i].captain_name);
             pB.unshift(teams[j].captain_name);
@@ -307,10 +315,9 @@
 
             let subDetails = [];
             for(let k=0; k<5; k++) {
-              subDetails.push({ pa: pA[k] || 'Player A', pb: pB[k] || 'Player B', sa: 0, sb: 0 });
+              subDetails.push({ pa: pA[k] || `Player ${k+1}`, pb: pB[k] || `Player ${k+1}`, sa: 0, sb: 0 });
             }
 
-            // Calculate match date
             let currentMatchDate = new Date(baseDate);
             currentMatchDate.setDate(baseDate.getDate() + (matchCounter * interval));
             let dateFormatted = currentMatchDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -331,52 +338,54 @@
       }
 
       await supabaseClient.from('matches').insert(fixtureList);
-      alert("🎉 ১২টি ডাবল ফিক্সচার নির্দিষ্ট ডেট অনুযায়ী তৈরি হয়েছে!");
+      alert("🎉 ১২টি ডাবল ফিক্সচার সফলভাবে তৈরি হয়েছে!");
       toggleModal('modal-admin');
       loadDashboard();
     }
 
     async function openScoreModal(id, teamA, teamB) {
-      const pass = prompt("এডমিন পাসওয়ার্ড দিন:");
-      if(pass !== "admin123") return alert("ভুল পাসওয়ার্ড!");
+      setTimeout(async () => {
+        const pass = prompt("এডমিন পাসওয়ার্ড দিন:");
+        if(pass !== "admin123") return alert("ভুল পাসওয়ার্ড!");
 
-      activeMatchId = id;
-      document.getElementById('score-modal-title').innerText = `${teamA} vs ${teamB}`;
+        activeMatchId = id;
+        document.getElementById('score-modal-title').innerText = `${teamA} vs ${teamB}`;
 
-      const { data: match } = await supabaseClient.from('matches').select('*').eq('id', id).single();
-      const container = document.getElementById('submatches-input-container');
-      
-      let html = '';
-      let details = match.details || [
-        {pa: 'Player 1', pb: 'Player 1', sa: 0, sb: 0},
-        {pa: 'Player 2', pb: 'Player 2', sa: 0, sb: 0},
-        {pa: 'Player 3', pb: 'Player 3', sa: 0, sb: 0},
-        {pa: 'Player 4', pb: 'Player 4', sa: 0, sb: 0},
-        {pa: 'Player 5', pb: 'Player 5', sa: 0, sb: 0}
-      ];
+        const { data: match } = await supabaseClient.from('matches').select('*').eq('id', id).single();
+        const container = document.getElementById('submatches-input-container');
+        
+        let html = '';
+        let details = match.details || [
+          {pa: 'Player 1', pb: 'Player 1', sa: 0, sb: 0},
+          {pa: 'Player 2', pb: 'Player 2', sa: 0, sb: 0},
+          {pa: 'Player 3', pb: 'Player 3', sa: 0, sb: 0},
+          {pa: 'Player 4', pb: 'Player 4', sa: 0, sb: 0},
+          {pa: 'Player 5', pb: 'Player 5', sa: 0, sb: 0}
+        ];
 
-      details.forEach((d, i) => {
-        html += `
-          <div class="bg-slate-900 p-2.5 rounded border border-slate-700 space-y-2">
-            <span class="text-xs font-bold text-emerald-400">Match ${i+1} Setup</span>
-            <div class="flex gap-2 text-xs">
-              <input type="text" value="${d.pa}" class="pa-${i+1} w-1/2 bg-slate-800 border border-slate-600 rounded p-1.5 focus:outline-none">
-              <input type="text" value="${d.pb}" class="pb-${i+1} w-1/2 bg-slate-800 border border-slate-600 rounded p-1.5 focus:outline-none">
-            </div>
-            <div class="flex items-center justify-between text-xs pt-1">
-              <span class="text-slate-400">Score Input:</span>
-              <div class="flex items-center gap-2">
-                <input type="number" min="0" value="${d.sa}" class="sa-${i+1} w-12 bg-slate-800 text-center border border-slate-600 rounded p-1">
-                <span>-</span>
-                <input type="number" min="0" value="${d.sb}" class="sb-${i+1} w-12 bg-slate-800 text-center border border-slate-600 rounded p-1">
+        details.forEach((d, i) => {
+          html += `
+            <div class="bg-slate-900 p-2.5 rounded border border-slate-700 space-y-2">
+              <span class="text-xs font-bold text-emerald-400">Match ${i+1} Setup</span>
+              <div class="flex gap-2 text-xs">
+                <input type="text" value="${d.pa}" class="pa-${i+1} w-1/2 bg-slate-800 border border-slate-600 rounded p-1.5 text-white">
+                <input type="text" value="${d.pb}" class="pb-${i+1} w-1/2 bg-slate-800 border border-slate-600 rounded p-1.5 text-white">
+              </div>
+              <div class="flex items-center justify-between text-xs pt-1">
+                <span class="text-slate-400">Score Input:</span>
+                <div class="flex items-center gap-2">
+                  <input type="number" min="0" value="${d.sa}" class="sa-${i+1} w-12 bg-slate-800 text-center border border-slate-600 rounded p-1 text-white">
+                  <span>-</span>
+                  <input type="number" min="0" value="${d.sb}" class="sb-${i+1} w-12 bg-slate-800 text-center border border-slate-600 rounded p-1 text-white">
+                </div>
               </div>
             </div>
-          </div>
-        `;
-      });
+          `;
+        });
 
-      container.innerHTML = html;
-      toggleModal('modal-score');
+        container.innerHTML = html;
+        toggleModal('modal-score');
+      }, 50);
     }
 
     async function saveMatchScore() {
@@ -387,7 +396,7 @@
         let pa = document.querySelector(`.pa-${i}`).value.trim();
         let pb = document.querySelector(`.pb-${i}`).value.trim();
         let sa = parseInt(document.querySelector(`.sa-${i}`).value) || 0;
-        let sb = parseInt(document.querySelector(`.sa-${i}`).value) || 0;
+        let sb = parseInt(document.querySelector(`.sb-${i}`).value) || 0;
 
         if(sa > sb) winsA++;
         else if(sb > sa) winsB++;
@@ -432,12 +441,4 @@
           }
         });
 
-        await supabaseClient.from('teams').update({ mp, w, l, gf, ga, pts }).eq('id', t.id);
-      }
-    }
-
-    function promptEditRules() {
-      const newRules = prompt("টুর্নামেন্টের নতুন রুলস লিখুন (কমার সাহায্যে আলাদা করুন):", "প্রতিটি ক্রু ব্যাটেলে ৫টি ১v১ ম্যাচ হবে, যে টিম ৩টি জিতবে তারা জয়ী ৩ পয়েন্ট পাবে");
-      if(newRules) {
-        const rulesArray = newRules.split(',');
-        document.getElementById('rules-list').innerHTM
+  
