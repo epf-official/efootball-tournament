@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>eFootball 5v5 Championship</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Supabase CDN Fix -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-slate-900 text-white font-sans min-h-screen pb-24">
@@ -161,17 +162,19 @@
   </div>
 
   <script>
-    // Supabase Config
     const SUPABASE_URL = "https://cureynmwzbafajcmxped.supabase.co";
     const SUPABASE_KEY = "sb_publishable_j74BjQ3DQI-7Zt4Mupvnlw_0gU4EEP8";
     let supabaseClient;
     let activeMatchId = null;
 
-    if (window.supabase) {
-      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    function initSupabase() {
+      if (window.supabase && window.supabase.createClient) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      } else {
+        console.error("Supabase library script load failed.");
+      }
     }
 
-    // Modal Control Functions (Globally Accessible)
     window.openLoginModal = function() {
       document.getElementById('modal-login').classList.remove('hidden');
       document.getElementById('modal-login').classList.add('flex');
@@ -196,7 +199,9 @@
     };
 
     window.loadDashboard = async function() {
+      if(!supabaseClient) initSupabase();
       if(!supabaseClient) return;
+
       try {
         const { data: teams } = await supabaseClient
           .from('teams')
@@ -284,9 +289,10 @@
     };
 
     window.loadAdminTeams = async function() {
+      if(!supabaseClient) initSupabase();
       const { data: teams } = await supabaseClient.from('teams').select('*');
       const container = document.getElementById('admin-teams-list');
-      if(!teams || teams.length === 0) return container.innerHTML = "<p class='text-slate-400'>কোনো টিম নেই</p>";
+      if(!teams || teams.length === 0) return container.innerHTML = "<p class='text-slate-400'>কোনো টিম নিবন্ধিত নেই</p>";
       container.innerHTML = teams.map(t => `
         <div class="flex justify-between items-center bg-slate-900 p-2 rounded border border-slate-700">
           <span><strong>${t.team_name}</strong> (${t.captain_name})</span>
@@ -307,15 +313,19 @@
       let startDateStr = prompt("ম্যাচ শুরুর তারিখ দিন (যেমন: 2026-08-04):", "2026-08-04");
       if(!startDateStr) return;
 
-      let intervalDays = prompt("কত দিন পর পর ম্যাচ হবে? (যেমন: ২ দিন পর পর হলে '2' লিখুন):", "2");
+      let intervalDays = prompt("কত দিন পর পর ম্যাচ হবে? (যেমন: ২ লিখুন):", "2");
       if(!intervalDays) return;
 
       generateFixturesWithDate(startDateStr, parseInt(intervalDays) || 2);
     };
 
     async function generateFixturesWithDate(startDateStr, interval) {
-      const { data: teams } = await supabaseClient.from('teams').select('*, players(player_name)');
-      if(!teams || teams.length < 4) return alert("ডাবল ফিক্সচারের জন্য ৪টি টিম লাগবে!");
+      if(!supabaseClient) initSupabase();
+      const { data: teams, error: teamErr } = await supabaseClient.from('teams').select('*, players(player_name)');
+      
+      if(teamErr || !teams || teams.length < 2) {
+        return alert("ফিক্সচার বানাতে কমপক্ষে ২টি টিম লাগবে ডাটাবেজে!");
+      }
 
       await supabaseClient.from('matches').delete().neq('id', 0);
 
@@ -361,13 +371,19 @@
         }
       }
 
-      await supabaseClient.from('matches').insert(fixtureList);
-      alert("🎉 ১২টি ডাবল ফিক্সচার সফলভাবে তৈরি হয়েছে!");
-      window.closeModal('modal-admin');
-      loadDashboard();
+      const { error: matchErr } = await supabaseClient.from('matches').insert(fixtureList);
+
+      if(matchErr) {
+        alert("ফিক্সচার জেনারেট করতে সমস্যা হয়েছে: " + matchErr.message);
+      } else {
+        alert("🎉 ফিক্সচার সফলভাবে জেনারেট হয়েছে!");
+        window.closeModal('modal-admin');
+        loadDashboard();
+      }
     }
 
     window.openScoreModal = async function(id, teamA, teamB) {
+      if(!supabaseClient) initSupabase();
       activeMatchId = id;
       document.getElementById('score-modal-title').innerText = `${teamA} vs ${teamB}`;
 
@@ -396,6 +412,10 @@
               <div class="flex items-center gap-2">
                 <input type="number" min="0" value="${d.sa}" class="sa-${i+1} w-12 bg-slate-800 text-center border border-slate-600 rounded p-1 text-white">
                 <span>-</span>
+                <input type="number" min="0" value="${d.sb}" class="sb-${i+1 font-semibold">
+              <div class="flex items-center gap-2">
+                <input type="number" min="0" value="${d.sa}" class="sa-${i+1} w-12 bg-slate-800 text-center border border-slate-600 rounded p-1 text-white">
+                <span>-</span>
                 <input type="number" min="0" value="${d.sb}" class="sb-${i+1} w-12 bg-slate-800 text-center border border-slate-600 rounded p-1 text-white">
               </div>
             </div>
@@ -409,11 +429,12 @@
     };
 
     window.saveMatchScore = async function() {
+      if(!supabaseClient) initSupabase();
       let details = [];
       let winsA = 0, winsB = 0;
 
       for(let i=1; i<=5; i++) {
-        let pa =        document.querySelector(`.pa-${i}`).value.trim();
+        let pa = document.querySelector(`.pa-${i}`).value.trim();
         let pb = document.querySelector(`.pb-${i}`).value.trim();
         let sa = parseInt(document.querySelector(`.sa-${i}`).value) || 0;
         let sb = parseInt(document.querySelector(`.sb-${i}`).value) || 0;
@@ -439,8 +460,11 @@
     };
 
     async function updateStandings() {
+      if(!supabaseClient) initSupabase();
       const { data: teams } = await supabaseClient.from('teams').select('*');
       const { data: matches } = await supabaseClient.from('matches').select('*').eq('status', 'Completed');
+
+      if(!teams) return;
 
       for(let t of teams) {
         let mp=0, w=0, l=0, gf=0, ga=0, pts=0;
@@ -474,7 +498,10 @@
       }
     };
 
-    window.onload = loadDashboard;
+    window.onload = function() {
+      initSupabase();
+      loadDashboard();
+    };
   </script>
 </body>
 </html>
