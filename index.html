@@ -413,4 +413,68 @@
       let winsA = 0, winsB = 0;
 
       for(let i=1; i<=5; i++) {
-        let pa =
+        let pa =        document.querySelector(`.pa-${i}`).value.trim();
+        let pb = document.querySelector(`.pb-${i}`).value.trim();
+        let sa = parseInt(document.querySelector(`.sa-${i}`).value) || 0;
+        let sb = parseInt(document.querySelector(`.sb-${i}`).value) || 0;
+
+        if(sa > sb) winsA++;
+        else if(sb > sa) winsB++;
+
+        details.push({ pa, pb, sa, sb });
+      }
+
+      await supabaseClient.from('matches').update({
+        score_a: winsA,
+        score_b: winsB,
+        status: 'Completed',
+        details: details
+      }).eq('id', activeMatchId);
+
+      await updateStandings();
+
+      alert("🎉 স্কোর ও ফিক্সচার আপডেট করা হয়েছে!");
+      window.closeModal('modal-score');
+      loadDashboard();
+    };
+
+    async function updateStandings() {
+      const { data: teams } = await supabaseClient.from('teams').select('*');
+      const { data: matches } = await supabaseClient.from('matches').select('*').eq('status', 'Completed');
+
+      for(let t of teams) {
+        let mp=0, w=0, l=0, gf=0, ga=0, pts=0;
+
+        matches.forEach(m => {
+          if(m.team_a === t.team_name) {
+            mp++;
+            gf += m.score_a;
+            ga += m.score_b;
+            if(m.score_a > m.score_b) { w++; pts += 3; }
+            else if(m.score_b > m.score_a) { l++; }
+          } else if(m.team_b === t.team_name) {
+            mp++;
+            gf += m.score_b;
+            ga += m.score_a;
+            if(m.score_b > m.score_a) { w++; pts += 3; }
+            else if(m.score_a > m.score_b) { l++; }
+          }
+        });
+
+        await supabaseClient.from('teams').update({ mp, w, l, gf, ga, pts }).eq('id', t.id);
+      }
+    }
+
+    window.promptEditRules = function() {
+      const newRules = prompt("টুর্নামেন্টের নতুন রুলস লিখুন (কমার সাহায্যে আলাদা করুন):", "প্রতিটি ক্রু ব্যাঞ্চলে ৫টি ১v১ ম্যাচ হবে, যে টিম ৩টি জিতবে তারা জয়ী ৩ পয়েন্ট পাবে");
+      if(newRules) {
+        const rulesArray = newRules.split(',');
+        document.getElementById('rules-list').innerHTML = rulesArray.map(r=>`<li>${r.trim()}</li>`).join('');
+        alert("রুলস আপডেট করা হয়েছে!");
+      }
+    };
+
+    window.onload = loadDashboard;
+  </script>
+</body>
+</html>
