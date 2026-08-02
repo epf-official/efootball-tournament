@@ -339,27 +339,26 @@
               </tr>
             `;
           }).join('');
-                  // পাবলিক টিম ও প্লেয়ার ইউআইডি তালিকা রেন্ডার
+                          // পাবলিক টিম ও প্লেয়ার ইউআইডি কার্ড রেন্ডার
         const publicTeamsContainer = document.getElementById('public-teams-list');
         if (publicTeamsContainer && teams) {
           publicTeamsContainer.innerHTML = teams.map(t => {
             let playersHtml = '';
             
             // ক্যাপ্টেন
-playersHtml += `
-  <div class="flex justify-between items-center bg-slate-950/60 p-2 rounded border border-slate-700/50">
-    <span class="font-bold text-slate-200">👑 ${t.captain_name} <span class="text-[10px] text-emerald-400 font-normal">(Captain)</span></span>
-    <span class="text-amber-300 font-mono font-bold">${t.efootball_id || t.game_id || t.captain_game_id || t.captain_id || 'N/A'}</span>
-  </div>`;
-
+            playersHtml += `
+              <div class="flex justify-between items-center bg-slate-950/60 p-2 rounded border border-slate-700/50">
+                <span class="font-bold text-slate-200">👑 ${t.captain_name} <span class="text-[10px] text-emerald-400 font-normal">(Captain)</span></span>
+                <span class="text-amber-300 font-mono font-bold">${t.captain_id || 'N/A'}</span>
+              </div>`;
 
             // প্লেয়ারসমূহ
             if (t.players && t.players.length > 0) {
               t.players.forEach(p => {
-                const uid = p.game_id || p.user_id || p.efootball_id || 'N/A';
+                const uid = p.player_id || p.game_id || p.user_id || p.efootball_id || 'N/A';
                 playersHtml += `
                   <div class="flex justify-between items-center bg-slate-950/40 p-2 rounded border border-slate-800">
-                    <span class="text-slate-300">🎮 ${p.player_name}</span>
+                    <span class="text-slate-300">🎮 ${p.player_name || p.name}</span>
                     <span class="text-amber-300 font-mono font-bold">${uid}</span>
                   </div>`;
               });
@@ -378,6 +377,7 @@ playersHtml += `
             `;
           }).join('');
         }
+
           
 
           if(teams.length >= 2) {
@@ -788,3 +788,59 @@ playersHtml += `
   </script>
 </body>
 </html>
+// ১. এডমিন প্যানেল থেকে ক্যাপ্টেনের আইডি আপডেট করার ফাংশন (teams টেবিল)
+async function updateCaptainId(teamId) {
+  const inputElem = document.getElementById(`cap-id-${teamId}`);
+  if (!inputElem) return;
+
+  const newId = inputElem.value.trim();
+  const client = getSupabase();
+  if (!client) return;
+
+  try {
+    const { error } = await client
+      .from('teams')
+      .update({ captain_id: newId })
+      .eq('id', teamId);
+
+    if (error) {
+      alert("ক্যাপ্টেনের আইডি আপডেট করতে সমস্যা হয়েছে: " + error.message);
+    } else {
+      alert("ক্যাপ্টেনের আইডি সফলভাবে আপডেট হয়েছে! 🎉");
+      if (typeof loadDashboard === 'function') loadDashboard();
+      if (typeof loadAdminTeams === 'function') loadAdminTeams();
+    }
+  } catch (err) {
+    console.error(err);
+    alert("একটি সমস্যা দেখা দিয়েছে!");
+  }
+}
+
+// ২. এডমিন প্যানেল থেকে সাধারণ প্লেয়ারের আইডি আপডেট করার ফাংশন (players টেবিল)
+async function updatePlayerId(playerId) {
+  const inputElem = document.getElementById(`player-id-${playerId}`);
+  if (!inputElem) return;
+
+  const newId = inputElem.value.trim();
+  const client = getSupabase();
+  if (!client) return;
+
+  try {
+    const { error } = await client
+      .from('players')
+      .update({ player_id: newId, game_id: newId })
+      .eq('id', playerId);
+
+    if (error) {
+      alert("প্লেয়ারের আইডি আপডেট করতে সমস্যা হয়েছে: " + error.message);
+    } else {
+      alert("প্লেয়ারের আইডি সফলভাবে আপডেট হয়েছে! 🎮");
+      if (typeof loadDashboard === 'function') loadDashboard();
+      if (typeof loadAdminTeams === 'function') loadAdminTeams();
+    }
+  } catch (err) {
+    console.error(err);
+    alert("একটি সমস্যা দেখা দিয়েছে!");
+  }
+}
+
