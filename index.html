@@ -345,32 +345,38 @@
     publicTeamsContainer.innerHTML = teams.map(t => {
       let playersHtml = '';
 
-      // ১. ক্যাপ্টেনের ইনপুট ফিল্ড ও সেভ বাটন
+      // ১. সাধারণ ক্যাপ্টেনের নাম ও আইডি (কোনো ইনপুট বা বাটন ছাড়া)
       playersHtml += `
-        <div class="flex items-center justify-between text-xs bg-slate-950/60 p-2 rounded border border-slate-800 my-1">
-          <span class="text-slate-300 font-medium">👑 ${t.captain_name} <span class="text-[10px] text-emerald-400">(Captain)</span></span>
-          <div class="flex items-center gap-1">
-            <input type="text" id="cap-id-${t.id}" value="${t.captain_id || ''}" placeholder="Captain UID" class="bg-slate-900 border border-slate-700 text-amber-300 text-xs px-2 py-1 rounded w-28 text-center focus:outline-none focus:border-emerald-500">
-            <button onclick="updateCaptainId(${t.id})" class="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] px-2 py-1 rounded font-bold transition">Save</button>
-          </div>
+        <div class="flex justify-between items-center text-xs bg-slate-950/60 p-2 rounded border border-slate-800 my-1">
+          <span class="font-bold text-slate-200">👑 ${t.captain_name} <span class="text-[10px] text-emerald-400">(Captain)</span></span>
+          <span class="text-amber-300 font-mono">${t.captain_id || 'N/A'}</span>
         </div>
       `;
 
-      // ২. স্কোয়াডের বাকি প্লেয়ারদের ইনপুট ফিল্ড ও সেভ বাটন
+      // ২. সাধারণ প্লেয়ারের নাম ও আইডি
       if (t.players && t.players.length > 0) {
         t.players.forEach(p => {
-          const uid = p.player_id || p.game_id || p.user_id || '';
+          const uid = p.player_id || p.game_id || p.user_id || 'N/A';
           playersHtml += `
-            <div class="flex items-center justify-between text-xs bg-slate-950/40 p-2 rounded border border-slate-800/80 my-1">
+            <div class="flex justify-between items-center text-xs bg-slate-950/40 p-2 rounded border border-slate-800/80 my-1">
               <span class="text-slate-300">🎮 ${p.player_name || p.name}</span>
-              <div class="flex items-center gap-1">
-                <input type="text" id="player-id-${p.id}" value="${uid}" placeholder="Player UID" class="bg-slate-900 border border-slate-700 text-amber-300 text-xs px-2 py-1 rounded w-28 text-center focus:outline-none focus:border-emerald-500">
-                <button onclick="updatePlayerId(${p.id})" class="bg-blue-600 hover:bg-blue-500 text-white text-[10px] px-2 py-1 rounded font-bold transition">Save</button>
-              </div>
+              <span class="text-amber-300 font-mono">${uid}</span>
             </div>
           `;
         });
       }
+
+      return `
+        <div class="bg-slate-900 border border-slate-700/80 rounded-lg p-3 my-2 space-y-2">
+          <h4 class="font-bold text-emerald-400 text-sm border-b border-slate-800 pb-2">🏆 ${t.team_name}</h4>
+          <div class="space-y-1 mt-2">
+            ${playersHtml}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
 
       return `
         <div class="bg-slate-900 border border-slate-700/80 rounded-lg p-3 my-2 space-y-2">
