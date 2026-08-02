@@ -346,11 +346,12 @@
             let playersHtml = '';
             
             // ক্যাপ্টেন
-            playersHtml += `
-              <div class="flex justify-between items-center bg-slate-950/60 p-2 rounded border border-slate-700/50">
-                <span class="font-bold text-slate-200">👑 ${t.captain_name} <span class="text-[10px] text-emerald-400 font-normal">(Captain)</span></span>
-                <span class="text-amber-300 font-mono font-bold">${t.captain_game_id || 'N/A'}</span>
-              </div>`;
+playersHtml += `
+  <div class="flex justify-between items-center bg-slate-950/60 p-2 rounded border border-slate-700/50">
+    <span class="font-bold text-slate-200">👑 ${t.captain_name} <span class="text-[10px] text-emerald-400 font-normal">(Captain)</span></span>
+    <span class="text-amber-300 font-mono font-bold">${t.efootball_id || t.game_id || t.captain_game_id || t.captain_id || 'N/A'}</span>
+  </div>`;
+
 
             // প্লেয়ারসমূহ
             if (t.players && t.players.length > 0) {
